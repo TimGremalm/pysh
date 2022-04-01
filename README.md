@@ -1,0 +1,2 @@
+# pysh
+Interactive ipython shell
