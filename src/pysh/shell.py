@@ -16,7 +16,10 @@ class CfgShell(object):
 
 class ShellPrompts(Prompts):
     def in_prompt_tokens(self, cli=None):
-        return [(Token, 'PYSH$ ')]
+        l = [(Token, 'PYSH$ ')]
+        if hasattr(self.shell, "simple_pysh_prompt"):
+            l = [(Token, self.shell.simple_pysh_prompt)]
+        return l
 
     def continuation_prompt_tokens(self, cli=None, width=None):
         return [(Token, '   ')]
@@ -25,10 +28,10 @@ class ShellPrompts(Prompts):
         return [(Token, '')]
 
 
-class Shell:
+class Pysh:
     """IPython shell wrapper class for making an interactive PYSH shell."""
 
-    def __init__(self, dict_to_include: dict = []):
+    def __init__(self, dict_to_include: dict = [], prompt: str = None):
         """
         Constructor for PYSH shell.
         :type dict_to_include: dict of objects will be placed under self, so they can be accessed easy in interactive
@@ -42,6 +45,8 @@ class Shell:
             'Type `h <Command>` to get usage information for a given command,',
             'or `h` for looking into a brief description of all commands.'
         ]
+        if prompt:
+            self.simple_pysh_prompt = prompt
 
         self.dict_to_include = dict_to_include
 
@@ -137,6 +142,8 @@ class Shell:
             )
         self.shell.define_macro('q', 'quit()')
         q = self.shell.user_ns['q']
+        if hasattr(self, "simple_pysh_prompt"):
+            setattr(self.shell, "simple_pysh_prompt", self.simple_pysh_prompt)
 
         # Add dict_to_include to root namespace
         if self.dict_to_include:
@@ -188,5 +195,5 @@ if __name__ == '__main__':
             return str(self)
 
     obj = DataClass()
-    Shell(dict_to_include={'included_object': obj})
+    Pysh(dict_to_include={'included_object': obj})
 
