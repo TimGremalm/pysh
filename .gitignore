@@ -59,6 +59,9 @@ target/
 .env
 .ropeproject
 
+# PyCharm
+.idea
+
 
 ### Keys ###
 id_rsa
