@@ -31,7 +31,7 @@ class ShellPrompts(Prompts):
 class Pysh:
     """IPython shell wrapper class for making an interactive PYSH shell."""
 
-    def __init__(self, dict_to_include: dict = [], prompt: str = None):
+    def __init__(self, dict_to_include: dict = [], prompt: str = None, banner: list = None):
         """
         Constructor for PYSH shell.
         :type dict_to_include: dict of objects will be placed under self, so they can be accessed easy in interactive
@@ -39,12 +39,14 @@ class Pysh:
         """
         # Default banner messages
         self.shell = None
-        self._banner_messages = [
-            'PYSH interactive shell',
-            'You may leave this shell by typing `exit` or pressing Ctrl+D',
-            'Type `h <Command>` to get usage information for a given command,',
-            'or `h` for looking into a brief description of all commands.'
-        ]
+        self._banner_messages = []
+        if banner:
+            self._banner_messages = banner
+        else:
+            self._banner_messages = ['PYSH interactive shell',
+                                     'You may leave this shell by typing `exit`, `q` or pressing Ctrl+D',
+                                     'Type `h <Command>` to get usage information for a given command,',
+                                     'or `h` for looking into a brief description of all commands.']
         if prompt:
             self.simple_pysh_prompt = prompt
 
@@ -117,6 +119,16 @@ class Pysh:
         self._commands.append(cmd)
         self._commands_dict[name] = cmd
 
+    def get_banner(self) -> str:
+        if self._banner_messages:
+            out = ''
+            out += '* ' + str('*' * 78) + '\n'
+            out += '\n'.join(['* %s' % msg for msg in self._banner_messages]) + '\n'
+            out += '* ' + str('*' * 78) + '\n'
+            return out
+        else:
+            return ''
+
     def run(self, script_path=None):
         """Run the shell.
 
@@ -129,10 +141,7 @@ class Pysh:
 
         self.shell = embed.InteractiveShellEmbed(
             prompts_class=ShellPrompts,
-            banner1='* ' + str('*' * 78) + '\n'
-                    + '\n'.join(
-                ['* %s' % msg for msg in self._banner_messages]) + '\n'
-                    + '* ' + str('*' * 78),
+            banner1=self.get_banner(),
             exit_msg='Leaving PYSH interactive...'
         )
         for entry in self._commands:
