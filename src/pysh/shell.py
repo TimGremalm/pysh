@@ -69,6 +69,7 @@ class Pysh:
         self._commands = []
         self._commands_dict = {}
         self.add_command('h', self.run_h)
+        self.add_command('p', self.print)
         self.run()
 
     class Error(Exception):
@@ -145,7 +146,7 @@ class Pysh:
     def _printing_thread(self):
         print("_print_thread start")
         while self._threadPrintingRun:
-            printing(self)
+            # printing(self)
             sleep(self.print_thread_interval)
         print("_print_thread stop")
 
@@ -224,6 +225,9 @@ class Pysh:
                 for e in self._commands
             ]
         ))
+
+    def print(self):
+        printing(self)
 
 
 if __name__ == '__main__':
