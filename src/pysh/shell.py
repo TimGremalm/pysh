@@ -4,6 +4,10 @@ from time import sleep
 import IPython
 from IPython.terminal import embed
 from IPython.terminal.prompts import Prompts, Token
+from threading import Thread
+from time import sleep
+
+from pysh.printing import printing
 
 
 class CfgShell(object):
@@ -31,7 +35,8 @@ class ShellPrompts(Prompts):
 class Pysh:
     """IPython shell wrapper class for making an interactive PYSH shell."""
 
-    def __init__(self, dict_to_include: dict = [], prompt: str = None, banner: list = None):
+    def __init__(self, dict_to_include: dict = [], prompt: str = None, banner: list = None,
+                 print_thread_interval: float = None):
         """
         Constructor for PYSH shell.
         :type dict_to_include: dict of objects will be placed under self, so they can be accessed easy in interactive
@@ -49,8 +54,16 @@ class Pysh:
                                      'or `h` for looking into a brief description of all commands.']
         if prompt:
             self.simple_pysh_prompt = prompt
+        if print_thread_interval:
+            self.print_thread_interval = print_thread_interval
+        else:
+            self.print_thread_interval = 0.5
 
         self.dict_to_include = dict_to_include
+
+        # Read thread
+        self._threadPrintingRun = False
+        self._threadPrinting = None
 
         # Magic functions for IPython
         self._commands = []
@@ -129,6 +142,21 @@ class Pysh:
         else:
             return ''
 
+    def _printing_thread(self):
+        print("_print_thread start")
+        while self._threadPrintingRun:
+            printing(self)
+            sleep(self.print_thread_interval)
+        print("_print_thread stop")
+
+    def _is_printing_thread_running(self):
+        if not hasattr(self._threadPrinting, "isAlive"):
+            return False
+        if self._threadPrinting.isAlive():
+            return True
+        else:
+            return False
+
     def run(self, script_path=None):
         """Run the shell.
 
@@ -161,10 +189,17 @@ class Pysh:
 
         self.shell.events.register('post_execute', self.post_execute)
 
+        # Start printing thread
+        if not self._is_printing_thread_running():
+            self._threadPrintingRun = True
+            self._threadPrinting = Thread(target=self._printing_thread, name='PYSHPrintingThread')
+            self._threadPrinting.start()
+
         if script_path is None:
             self.shell()
         else:
             self.shell.safe_execfile_ipy(script_path)
+        self._threadPrintingRun = False
 
     def post_execute(self):
         # print(f"post_execute {self}")
